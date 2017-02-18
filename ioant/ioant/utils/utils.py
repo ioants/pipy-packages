@@ -20,7 +20,19 @@ def fetch_json_file_as_dict(path_to_json):
     return json_dict
 
 
-
+def topic_to_dict(topic):
+    sub_topics_list = topic.split('/')
+    if len(sub_topics_list) is not 6:
+        return None
+    else:
+        topic_dict = {}
+        topic_dict['top'] = sub_topics_list[0]
+        topic_dict['global'] = sub_topics_list[1]
+        topic_dict['local'] = sub_topics_list[2]
+        topic_dict['client_id'] = sub_topics_list[3]
+        topic_dict['message_type'] = int(sub_topics_list[4])
+        topic_dict['stream_index'] = int(sub_topics_list[5])
+        return topic_dict
 
 
 if __name__ == '__main__':
