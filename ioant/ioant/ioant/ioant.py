@@ -13,13 +13,15 @@ logger = logging.getLogger(__name__)
 
 class Ioant:
     on_message_callback = None
+    on_connect_callback = None
     mqtt_client = None
     loaded_configuration = None
     delay = 1000
 
-    def __init__(self, callback):
+    def __init__(self, connect_callback, message_callback):
         """ Constructor """
-        self.on_message_callback = callback
+        self.on_message_callback = message_callback
+        self.on_connect_callback = connect_callback
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = self.__on_connect
         self.mqtt_client.on_message = self.__on_message
@@ -27,13 +29,13 @@ class Ioant:
     def setup(self, configuration):
         """ Setup """
         logger.debug("Attempting connect to: " +
-                     configuration['mqtt']['broker'] +
-                     " " + str(configuration['mqtt']['port']))
+                     configuration['ioant']['mqtt']['broker'] +
+                     " " + str(configuration['ioant']['mqtt']['port']))
         self.loaded_configuration = configuration
-        self.mqtt_client.connect(configuration['mqtt']['broker'],
-                                 configuration['mqtt']['port'],
+        self.mqtt_client.connect(configuration['ioant']['mqtt']['broker'],
+                                 configuration['ioant']['mqtt']['port'],
                                  60)
-        self.delay = configuration['delay']
+        self.delay = configuration['ioant']['communicationDelay']
 
     def update_loop(self):
         """ Updates the mqtt loop - checking for messages """
@@ -47,10 +49,10 @@ class Ioant:
 
     def subscribe(self, topic):
         """ subscribe to a topic """
-        subscription = topic['top']+ \
-        "/"+topic['global']+\
-        "/"+topic['local']+\
-        "/"+topic['client_id']+"/"
+        subscription = topic['top'] +\
+                       "/" + topic['global'] +\
+                       "/" + topic['local'] +\
+                       "/"+ topic['client_id']+"/"
 
         if topic['message_type'] == -1:
             subscription += '+/'
@@ -103,6 +105,7 @@ class Ioant:
     def __on_connect(self, client, userdata, flags, rc):
         """ When client connects to broker """
         logger.debug("Connected with rc code: " + str(rc))
+        self.on_connect_callback(rc)
 
     def get_topic(self):
         """ Return a empty topic structure """
