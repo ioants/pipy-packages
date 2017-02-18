@@ -5,12 +5,12 @@ import sys
 
 setup(
     name="ioant",
-    version="0.1.0",
+    version="0.1.5",
     packages=find_packages(),
     include_package_data=True,
     author="Adam Saxen",
     author_email="adam@asaxen.com",
-    description="This package is used for python scripts in IOAnt solution",
+    description="This package is used for python scripts in IOAnt platform solution",
     license="MIT",
     keywords="",
     url="http://ioant.com",   # project home page, if any

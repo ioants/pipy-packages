@@ -139,6 +139,9 @@ def run_protoc_gen(filepath_proto, code, output_path):
     if os_system == "linux":
         if os_arch == 'x86_64' or os_arch == 'amd64':
             protoc_binary = 'generators/bin/linux_64/protoc'
+        elif os_arch == 'armv7l':
+            print 'Error arch not supported: ' + os_arch
+            return False
         else:
             protoc_binary = 'generators/bin/linux_32/protoc'
     elif os_system == "darwin":
@@ -187,10 +190,11 @@ def extract_proto_messages(proto_file_path):
     return message_list
 
 
-
-def embedded_main(selected_os, proto_file_path, output_dir_path):
-    output_dir_path = os.path.abspath(os.path.join(os.getcwd(), output_dir_path))
-    proto_file_path = os.path.abspath(os.path.join(os.getcwd(), proto_file_path))
+def embedded_main(proto_file_path, output_dir_path):
+    output_dir_path = os.path.abspath(os.path.join(os.getcwd(),
+                                      output_dir_path))
+    proto_file_path = os.path.abspath(os.path.join(os.getcwd(),
+                                      proto_file_path))
 
     run_protoc_gen(proto_file_path,
                    'c',
@@ -225,8 +229,10 @@ def embedded_main(selected_os, proto_file_path, output_dir_path):
 
 
 def python_main(proto_file_path, output_dir_path):
-    output_dir_path = os.path.abspath(os.path.join(os.getcwd(), output_dir_path))
-    proto_file_path = os.path.abspath(os.path.join(os.getcwd(), proto_file_path))
+    output_dir_path = os.path.abspath(os.path.join(os.getcwd(),
+                                                   output_dir_path))
+    proto_file_path = os.path.abspath(os.path.join(os.getcwd(),
+                                                   proto_file_path))
 
     print("output_dir_path:" + output_dir_path)
     print("proto_file_path:" + proto_file_path)

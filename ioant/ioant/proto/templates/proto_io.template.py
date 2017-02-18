@@ -1,4 +1,4 @@
-import messages_pb2 as ProtoNab
+import messages_pb2 as messages
 
 message_type_index_dict = {{{message_type_index_dict}}}
 index_message_type_dict = {{{index_message_type_dict}}}
