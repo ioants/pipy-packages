@@ -6,6 +6,7 @@ import time
 # These imports are auto generated files.
 import messages_pb2 as messages
 import proto_io as ProtoIO
+from google.protobuf.message import Message
 # These imports are auto generated files.
 import logging
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class Ioant:
         if topic['stream_index'] >= 0:
             stream_index = topic['stream_index']
 
-        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict(message.DESCRIPTOR.name)) + "/" + str(stream_index)
+        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
 
         (result, mid) = self.mqtt_client.publish(topic_string, bytearray(payload))
 
