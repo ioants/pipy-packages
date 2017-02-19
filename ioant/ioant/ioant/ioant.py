@@ -70,13 +70,11 @@ class Ioant:
     def publish(self, message, topic):
         """ publish message with topic """
         payload = message.SerializeToString()
+        stream_index = 0
+        if topic['stream_index'] >= 0:
+            stream_index = topic['stream_index']
 
-        if topic['stream_index'] < 0:
-            topic['stream_index'] = 0
-        topic_string = topic['top'] + "/" + topic['global'] \
-            + "/" + topic['local'] + "/" + topic['client_id'] \
-            + "/" + str(ProtoIO.message_type_index_dict(message.DESCRIPTOR.name)) \
-            + "/" + str(topic['stream_index'])
+        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict(message.DESCRIPTOR.name)) + "/" + str(stream_index)
 
         (result, mid) = self.mqtt_client.publish(topic_string, bytearray(payload))
 
