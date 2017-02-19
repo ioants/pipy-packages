@@ -5,7 +5,7 @@ import sys
 
 setup(
     name="ioant",
-    version="0.1.8",
+    version="0.1.9",
     packages=find_packages(),
     include_package_data=True,
     author="Adam Saxen",
