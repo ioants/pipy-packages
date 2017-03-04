@@ -3,6 +3,7 @@ Repository for all IOAnt PyPi packages
 
 ## ioant package
 Contains:
+- Module for ioant sdk
 - Module for generating proto files
 - Module for common utils
 

@@ -3,6 +3,8 @@
 # -----------------------------------------------------------------------------
 import paho.mqtt.client as mqtt
 import time
+from .. import utils
+
 # These imports are auto generated files.
 import messages_pb2 as messages
 import proto_io as ProtoIO
@@ -18,14 +20,13 @@ class Ioant:
     mqtt_client = None
     loaded_configuration = None
     delay = 1000
+    system_topic = None
 
     def __init__(self, connect_callback, message_callback):
         """ Constructor """
         self.on_message_callback = message_callback
         self.on_connect_callback = connect_callback
-        self.mqtt_client = mqtt.Client()
-        self.mqtt_client.on_connect = self.__on_connect
-        self.mqtt_client.on_message = self.__on_message
+
 
     def setup(self, configuration):
         """ Setup """
@@ -33,10 +34,20 @@ class Ioant:
                      configuration['ioant']['mqtt']['broker'] +
                      " " + str(configuration['ioant']['mqtt']['port']))
         self.loaded_configuration = configuration
+        self.mqtt_client = mqtt.Client(configuration['ioant']['mqtt']['client_id'])
+        self.mqtt_client.on_connect = self.__on_connect
+        self.mqtt_client.on_message = self.__on_message
         self.mqtt_client.connect(configuration['ioant']['mqtt']['broker'],
                                  configuration['ioant']['mqtt']['port'],
                                  60)
-        self.delay = configuration['ioant']['communicationDelay']
+        self.delay = configuration['ioant']['communication_delay']
+        self.system_topic = self.get_topic()
+        self.system_topic['top'] = 'live'
+        self.system_topic['global'] = configuration['ioant']['mqtt']['global']
+        self.system_topic['local'] = configuration['ioant']['mqtt']['local']
+        self.system_topic['client_id'] = configuration['ioant']['mqtt']['client_id']
+
+
 
     def update_loop(self):
         """ Updates the mqtt loop - checking for messages """
@@ -89,7 +100,7 @@ class Ioant:
 
     def __on_message(self, client, obj, message):
         """ When message is recieved from broker """
-        logger.debug("Message recieved")
+        logger.debug("Message received")
         if self.on_message_callback is not None:
             topic_dict = self.get_topic_from_string(str(message.topic))
             try:
@@ -101,10 +112,33 @@ class Ioant:
 
             self.on_message_callback(topic_dict, decoded_message)
 
+    def __publish_bootinfo(self):
+        """ Publish boot info """
+        logger.debug("Boot info")
+        bootinfo_msg = self.create_message("BootInfo")
+        bootinfo_msg.platform = 0
+        bootinfo_msg.information = "start"
+        bootinfo_msg.ip_address = "0.0.0.0"
+        bootinfo_msg.sdk_version = "0.1.0"
+        bootinfo_msg.proto_version = 0
+        bootinfo_msg.communication_delay = self.loaded_configuration["ioant"]["communication_delay"]
+        bootinfo_msg.broker_connect_attempts = 7
+        bootinfo_msg.longitude = self.loaded_configuration["ioant"]["longitude"]
+        bootinfo_msg.latitude = self.loaded_configuration["ioant"]["latitude"]
+        bootinfo_msg.app_generic_a = self.loaded_configuration["ioant"]["app_generic_a"]
+        bootinfo_msg.app_generic_b = self.loaded_configuration["ioant"]["app_generic_b"]
+        bootinfo_msg.app_generic_c = self.loaded_configuration["ioant"]["app_generic_c"]
+
+        self.publish(bootinfo_msg, self.system_topic);
+
     def __on_connect(self, client, userdata, flags, rc):
         """ When client connects to broker """
         logger.debug("Connected with rc code: " + str(rc))
-        self.on_connect_callback(rc)
+        if rc == 0:
+            self.__publish_bootinfo()
+            self.on_connect_callback()
+        else:
+            logger.error("Failed to connect to mqtt broker: " + str(rc))
 
     def get_topic(self):
         """ Return a empty topic structure """
