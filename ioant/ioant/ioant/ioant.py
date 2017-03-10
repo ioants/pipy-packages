@@ -56,7 +56,7 @@ class Ioant:
         if rc is not 0:
             logger.error("No connection!")
             time.sleep(2)
-            client.reconnect()
+            self.mqtt_client.reconnect()
         time.sleep(self.delay/1000)
 
     def subscribe(self, topic):
