@@ -92,8 +92,10 @@ class IOant:
             topic['global'] = self.system_topic['global']
         if topic['local'] == '+' or len(topic['local']) < 1:
             topic['local'] = self.system_topic['local']
+        if topic['client_id'] == '+' or len(topic['client_id']) < 1:
+            topic['client_id'] = self.loaded_configuration['ioant']['mqtt']['client_id']
 
-        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + self.loaded_configuration['ioant']['mqtt']['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
+        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
 
         (result, mid) = self.mqtt_client.publish(topic_string, bytearray(payload))
 
