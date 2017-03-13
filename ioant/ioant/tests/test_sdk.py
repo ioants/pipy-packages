@@ -86,3 +86,123 @@ class SDKTestCase(unittest.TestCase):
         expected_topic['client_id'] = config_dict['ioant']['mqtt']['client_id']
 
         self.assertEqual(self.ioant.device_topic, expected_topic)
+
+
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_subscribe_to_all(self, mocked_ioant_mqtt):
+        test_topic = self.ioant.get_topic_structure()
+        self.ioant.subscribe(test_topic)
+
+        mocked_ioant_mqtt.subscribe.assert_called_with("+/+/+/+/+/#")
+
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_subscribe_to_specific(self, mocked_ioant_mqtt):
+        test_topic = self.ioant.get_topic_structure()
+        test_topic['top'] = 'live'
+        test_topic['global'] = 'globy'
+        test_topic['local'] = 'locy'
+        test_topic['client_id'] = 'testy'
+        test_topic['message_type'] = 1
+        test_topic['stream_index'] = 0
+
+        self.ioant.subscribe(test_topic)
+
+        mocked_ioant_mqtt.subscribe.assert_called_with("live/globy/locy/testy/1/0")
+
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_subscribe_to_partial(self, mocked_ioant_mqtt):
+        test_topic = self.ioant.get_topic_structure()
+        test_topic['top'] = 'live'
+        test_topic['global'] = 'globy'
+        test_topic['local'] = 'locy'
+        test_topic['message_type'] = 1
+
+        self.ioant.subscribe(test_topic)
+
+        mocked_ioant_mqtt.subscribe.assert_called_with("live/globy/locy/+/1/#")
+
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_subscribe_to_topic_with_no_message_type(self, mocked_ioant_mqtt):
+        test_topic = self.ioant.get_topic_structure()
+        test_topic['top'] = 'live'
+        test_topic['global'] = 'globy'
+        test_topic['local'] = 'locy'
+
+        self.ioant.subscribe(test_topic)
+
+        mocked_ioant_mqtt.subscribe.assert_called_with("live/globy/locy/+/+/#")
+
+    @mock.patch("ioant.sdk.mqtt.Client")
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_publish(self, mocked_ioant_mqtt, mocked_mqtt_client):
+        """Try to publish message"""
+        test_configuration = '{ \
+            "ioant" : { \
+                "mqtt" : { \
+                    "global" : "global", \
+                    "local" : "local", \
+                    "client_id" : "boilerplate", \
+                    "broker" : "ioant.com", \
+                    "user" : "hero", \
+                    "password" : "test", \
+                    "port" : 1883 \
+                 }, \
+                "communication_delay" : 5000, \
+                "latitude" : 0.0, \
+                "longitude" : 0.0, \
+                "app_generic_a" : 0, \
+                "app_generic_b" : 0, \
+                "app_generic_c" : 0 \
+            } \
+        }'
+        mocked_ioant_mqtt.publish.return_value = (0, True)
+        mocked_mqtt_client.return_value = mocked_ioant_mqtt
+
+        config_dict = utils.json_string_to_dict(test_configuration)
+        self.ioant.setup(config_dict)
+        msg = self.ioant.create_message("Configuration")
+        msg.client_id = 'test2'
+        self.ioant.publish(msg)
+
+        mocked_ioant_mqtt.publish.assert_called_with("live/global/local/boilerplate/0/0", bytearray(msg.SerializeToString()))
+
+
+    @mock.patch("ioant.sdk.mqtt.Client")
+    @mock.patch("ioant.sdk.IOAnt.mqtt_client")
+    def test_publish_custom_topic(self, mocked_ioant_mqtt, mocked_mqtt_client):
+        """Try to publish message using custom topic"""
+        test_configuration = '{ \
+            "ioant" : { \
+                "mqtt" : { \
+                    "global" : "global", \
+                    "local" : "local", \
+                    "client_id" : "boilerplate", \
+                    "broker" : "ioant.com", \
+                    "user" : "hero", \
+                    "password" : "test", \
+                    "port" : 1883 \
+                 }, \
+                "communication_delay" : 5000, \
+                "latitude" : 0.0, \
+                "longitude" : 0.0, \
+                "app_generic_a" : 0, \
+                "app_generic_b" : 0, \
+                "app_generic_c" : 0 \
+            } \
+        }'
+        mocked_ioant_mqtt.publish.return_value = (0, True)
+        mocked_mqtt_client.return_value = mocked_ioant_mqtt
+
+        config_dict = utils.json_string_to_dict(test_configuration)
+        self.ioant.setup(config_dict)
+        msg = self.ioant.create_message("Configuration")
+        msg.client_id = 'test3'
+        custom_topic = self.ioant.get_topic_structure()
+        custom_topic['top'] = 'live'
+        custom_topic['global'] = 'globby'
+        custom_topic['local'] = 'locay'
+        custom_topic['client_id'] = 'clienty'
+
+        self.ioant.publish(msg, custom_topic)
+
+        mocked_ioant_mqtt.publish.assert_called_with("live/globby/locay/clienty/0/0", bytearray(msg.SerializeToString()))

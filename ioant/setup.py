@@ -5,7 +5,7 @@ import sys
 
 setup(
     name="ioant",
-    version="0.2.2",
+    version="0.2.3",
     packages=find_packages(),
     include_package_data=True,
     author="Adam Saxen",
@@ -16,7 +16,9 @@ setup(
     url="http://ioant.com",   # project home page, if any
     install_requires=[
         "nose>=1.3.7",
-        "mock>=2.0.0"
+        "mock>=2.0.0",
+        "paho-mqtt>=1.2",
+        "protobuf>=3.1.0"
     ],
 
 )

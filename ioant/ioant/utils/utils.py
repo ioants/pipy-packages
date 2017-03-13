@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 import json
 import socket
 import fcntl
@@ -40,14 +41,12 @@ def topic_to_dict(topic):
         topic_dict['stream_index'] = int(sub_topics_list[5])
         return topic_dict
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
 
+def determine_os_and_arch():
+    os_system = platform.system().lower()
+    os_arch = platform.machine().lower()
+
+    return (os_system, os_arch)
 
 if __name__ == '__main__':
     unittest.main()

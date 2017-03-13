@@ -54,7 +54,6 @@ class IOAnt:
         rc = self.mqtt_client.loop()
         if rc is not 0:
             logger.error("No connection!")
-            time.sleep(2)
             self.mqtt_client.reconnect()
         time.sleep(self.delay/1000)
 
@@ -86,6 +85,8 @@ class IOAnt:
             topic = self.device_topic
         if topic['stream_index'] >= 0:
             stream_index = topic['stream_index']
+        if topic['top'] == '+' or len(topic['top']) < 1:
+            topic['top'] = self.device_topic['top']
         if topic['global'] == '+' or len(topic['global']) < 1:
             topic['global'] = self.device_topic['global']
         if topic['local'] == '+' or len(topic['local']) < 1:
@@ -94,14 +95,13 @@ class IOAnt:
             topic['client_id'] = self.loaded_configuration['ioant']['mqtt']['client_id']
 
         topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
-
         (result, mid) = self.mqtt_client.publish(topic_string, bytearray(payload))
 
         if result is not 0:
-            logger.debug("Failed to publish message with topic:" + topic_string)
+            logger.debug("Message sent with topic:" + topic_string)
             return True
         else:
-            logger.debug("Message sent with topic:" + topic_string)
+            logger.debug("Failed to publish message with topic:" + topic_string)
             return False
 
     def __on_message(self, client, obj, message):
@@ -122,20 +122,20 @@ class IOAnt:
         """ Publish boot info """
         logger.debug("Boot info")
         bootinfo_msg = self.create_message("BootInfo")
-        bootinfo_msg.platform = 0
+        bootinfo_msg.platform = bootinfo_msg.Platforms.Value('OTHER')
         bootinfo_msg.information = "start"
-        bootinfo_msg.ip_address = "0.0.0.0"
+        bootinfo_msg.ip_address = '0.0.0.0'
         bootinfo_msg.sdk_version = "0.1.0"
-        bootinfo_msg.proto_version = 0
+        bootinfo_msg.proto_version = messages.ProtoVersion.Value('VERSION')
         bootinfo_msg.communication_delay = self.loaded_configuration["ioant"]["communication_delay"]
-        bootinfo_msg.broker_connect_attempts = 7
+        bootinfo_msg.broker_connect_attempts = 1
         bootinfo_msg.longitude = self.loaded_configuration["ioant"]["longitude"]
         bootinfo_msg.latitude = self.loaded_configuration["ioant"]["latitude"]
         bootinfo_msg.app_generic_a = self.loaded_configuration["ioant"]["app_generic_a"]
         bootinfo_msg.app_generic_b = self.loaded_configuration["ioant"]["app_generic_b"]
         bootinfo_msg.app_generic_c = self.loaded_configuration["ioant"]["app_generic_c"]
 
-        self.publish(bootinfo_msg, self.device_topic);
+        self.publish(bootinfo_msg)
 
     def __on_connect(self, client, userdata, flags, rc):
         """ When client connects to broker """
