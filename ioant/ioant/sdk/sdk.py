@@ -14,13 +14,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class IOant:
+class IOAnt:
     on_message_callback = None
     on_connect_callback = None
     mqtt_client = None
     loaded_configuration = None
     delay = 1000
-    system_topic = None
+    device_topic = None
     is_initial_connect = True
 
     def __init__(self, connect_callback, message_callback):
@@ -42,13 +42,11 @@ class IOant:
                                  configuration['ioant']['mqtt']['port'],
                                  60)
         self.delay = configuration['ioant']['communication_delay']
-        self.system_topic = self.get_topic_structure()
-        self.system_topic['top'] = 'live'
-        self.system_topic['global'] = configuration['ioant']['mqtt']['global']
-        self.system_topic['local'] = configuration['ioant']['mqtt']['local']
-        self.system_topic['client_id'] = configuration['ioant']['mqtt']['client_id']
-
-
+        self.device_topic = self.get_topic_structure()
+        self.device_topic['top'] = 'live'
+        self.device_topic['global'] = configuration['ioant']['mqtt']['global']
+        self.device_topic['local'] = configuration['ioant']['mqtt']['local']
+        self.device_topic['client_id'] = configuration['ioant']['mqtt']['client_id']
 
     def update_loop(self):
         """ Updates the mqtt loop - checking for messages """
@@ -85,13 +83,13 @@ class IOant:
         payload = message.SerializeToString()
         stream_index = 0
         if topic is None:
-            topic = self.system_topic
+            topic = self.device_topic
         if topic['stream_index'] >= 0:
             stream_index = topic['stream_index']
         if topic['global'] == '+' or len(topic['global']) < 1:
-            topic['global'] = self.system_topic['global']
+            topic['global'] = self.device_topic['global']
         if topic['local'] == '+' or len(topic['local']) < 1:
-            topic['local'] = self.system_topic['local']
+            topic['local'] = self.device_topic['local']
         if topic['client_id'] == '+' or len(topic['client_id']) < 1:
             topic['client_id'] = self.loaded_configuration['ioant']['mqtt']['client_id']
 
@@ -105,7 +103,6 @@ class IOant:
         else:
             logger.debug("Message sent with topic:" + topic_string)
             return False
-
 
     def __on_message(self, client, obj, message):
         """ When message is recieved from broker """
@@ -138,7 +135,7 @@ class IOant:
         bootinfo_msg.app_generic_b = self.loaded_configuration["ioant"]["app_generic_b"]
         bootinfo_msg.app_generic_c = self.loaded_configuration["ioant"]["app_generic_c"]
 
-        self.publish(bootinfo_msg, self.system_topic);
+        self.publish(bootinfo_msg, self.device_topic);
 
     def __on_connect(self, client, userdata, flags, rc):
         """ When client connects to broker """
