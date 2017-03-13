@@ -17,9 +17,12 @@ def return_absolut_path(script_path, relative_path):
 
 
 def fetch_json_file_as_dict(path_to_json):
-    #db_schema_path = return_absolut_path(script_path, relative_path)
     json_str = open_file_as_string(path_to_json)
-    json_dict = json.loads(json_str)
+    return json_string_to_dict(json_str)
+
+
+def json_string_to_dict(json_string):
+    json_dict = json.loads(json_string)
     return json_dict
 
 

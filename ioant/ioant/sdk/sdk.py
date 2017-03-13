@@ -14,13 +14,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Ioant:
+class IOant:
     on_message_callback = None
     on_connect_callback = None
     mqtt_client = None
     loaded_configuration = None
     delay = 1000
     system_topic = None
+    is_initial_connect = True
 
     def __init__(self, connect_callback, message_callback):
         """ Constructor """
@@ -41,7 +42,7 @@ class Ioant:
                                  configuration['ioant']['mqtt']['port'],
                                  60)
         self.delay = configuration['ioant']['communication_delay']
-        self.system_topic = self.get_topic()
+        self.system_topic = self.get_topic_structure()
         self.system_topic['top'] = 'live'
         self.system_topic['global'] = configuration['ioant']['mqtt']['global']
         self.system_topic['local'] = configuration['ioant']['mqtt']['local']
@@ -79,14 +80,20 @@ class Ioant:
         logger.debug("Subscribed to:" + subscription)
         self.mqtt_client.subscribe(subscription)
 
-    def publish(self, message, topic):
+    def publish(self, message, topic=None):
         """ publish message with topic """
         payload = message.SerializeToString()
         stream_index = 0
+        if topic is None:
+            topic = self.system_topic
         if topic['stream_index'] >= 0:
             stream_index = topic['stream_index']
+        if topic['global'] == '+' or len(topic['global']) < 1:
+            topic['global'] = self.system_topic['global']
+        if topic['local'] == '+' or len(topic['local']) < 1:
+            topic['local'] = self.system_topic['local']
 
-        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + topic['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
+        topic_string = topic['top'] + "/" + topic['global'] + "/" + topic['local'] + "/" + self.loaded_configuration['ioant']['mqtt']['client_id'] + "/" + str(ProtoIO.message_type_index_dict[message.DESCRIPTOR.name]) + "/" + str(stream_index)
 
         (result, mid) = self.mqtt_client.publish(topic_string, bytearray(payload))
 
@@ -135,12 +142,14 @@ class Ioant:
         """ When client connects to broker """
         logger.debug("Connected with rc code: " + str(rc))
         if rc == 0:
-            self.__publish_bootinfo()
+            if self.is_initial_connect:
+                self.__publish_bootinfo()
+                self.is_initial_connect = False
             self.on_connect_callback()
         else:
             logger.error("Failed to connect to mqtt broker: " + str(rc))
 
-    def get_topic(self):
+    def get_topic_structure(self):
         """ Return a empty topic structure """
         topic_dict = {}
         topic_dict['top'] = "+"
