@@ -37,6 +37,7 @@ class IOAnt:
                      " " + str(configuration['ioant']['mqtt']['port']))
         self.loaded_configuration = configuration
         self.mqtt_client = mqtt.Client(configuration['ioant']['mqtt']['client_id'])
+        self.mqtt_client.username_pw_set(configuration['ioant']['mqtt']['user'], configuration['ioant']['mqtt']['password'])
         self.mqtt_client.on_connect = self.__on_connect
         self.mqtt_client.on_message = self.__on_message
         self.mqtt_client.connect(configuration['ioant']['mqtt']['broker'],
@@ -126,7 +127,7 @@ class IOAnt:
         bootinfo_msg.platform = bootinfo_msg.Platforms.Value('OTHER')
         bootinfo_msg.information = "start"
         bootinfo_msg.ip_address = '0.0.0.0'
-        bootinfo_msg.sdk_version = SDK_VERSION
+        bootinfo_msg.sdk_version = self.SDK_VERSION
         bootinfo_msg.proto_version = messages.ProtoVersion.Value('VERSION')
         bootinfo_msg.communication_delay = self.loaded_configuration["ioant"]["communication_delay"]
         bootinfo_msg.broker_connect_attempts = 1
