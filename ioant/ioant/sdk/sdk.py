@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class IOAnt:
+    SDK_VERSION = "0.2.0"
     on_message_callback = None
     on_connect_callback = None
     mqtt_client = None
@@ -125,7 +126,7 @@ class IOAnt:
         bootinfo_msg.platform = bootinfo_msg.Platforms.Value('OTHER')
         bootinfo_msg.information = "start"
         bootinfo_msg.ip_address = '0.0.0.0'
-        bootinfo_msg.sdk_version = "0.1.0"
+        bootinfo_msg.sdk_version = SDK_VERSION
         bootinfo_msg.proto_version = messages.ProtoVersion.Value('VERSION')
         bootinfo_msg.communication_delay = self.loaded_configuration["ioant"]["communication_delay"]
         bootinfo_msg.broker_connect_attempts = 1
