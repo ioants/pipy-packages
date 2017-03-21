@@ -45,7 +45,7 @@ def save_template(filepath, content):
         f.write(content)
 
 
-def generate_embedded_proto_nab(message_list, output_file_path):
+def generate_embedded_proto(message_list, output_file_path):
     script_dir = os.path.dirname(__file__)
 
     message_cases_cpp_template = open_file_as_string(
@@ -82,7 +82,7 @@ def generate_embedded_proto_nab(message_list, output_file_path):
     save_template(output_file_path+"/proto_io.cpp", nab_proto_cpp_file)
 
 
-def generate_python_proto_nab(message_list, output_file_path):
+def generate_python_proto(message_list, output_file_path):
     script_dir = os.path.dirname(__file__)
 
     main_template = open_file_as_string(
@@ -126,45 +126,18 @@ def find_messages_in_proto(proto_file_contents):
 
 
 def run_protoc_gen(filepath_proto, code, output_path):
+    # Required in order to find protoc installed via homebrew
+    custom_env = os.environ.copy()
+    path_to_brew = custom_env['HOME']+'/'+".linuxbrew/bin/"
+
+    # need to hack for different os:es here
     protoc_binary = ""
     out_arg = ""
-
-    os_system = platform.system().lower()
-    os_arch = platform.machine().lower()
-
-    print 'PWD:' + os.getcwd()
-    print "OS:" + os_system
-    print "ARCH:" + os_arch
-
-    if os_system == "linux":
-        if os_arch == 'x86_64' or os_arch == 'amd64':
-            protoc_binary = 'generators/bin/linux_64/protoc'
-        elif os_arch == 'armv7l':
-            print 'Error arch not supported: ' + os_arch
-            return False
-        else:
-            protoc_binary = 'generators/bin/linux_32/protoc'
-    elif os_system == "darwin":
-        if os_arch == 'x86_64' or os_arch == 'amd64':
-            protoc_binary = 'generators/bin/osx_64/protoc'
-        else:
-            protoc_binary = 'generators/bin/osx_32/protoc'
-    elif os_system == "windows":
-        protoc_binary = 'generators/bin/win_32/protoc'
-    else:
-        print 'Error os selected not supported: ' + os_system
-        return False
-
-    protoc_binary = os.path.abspath(os.path.join(filepath_proto,
-                                    protoc_binary))
 
     if code == 'c':
         out_arg += "-omessages.pb"
     elif code == 'python':
         out_arg += "--python_out="
-        out_arg += output_path + "/."
-    elif code == 'js':
-        out_arg += "--js_out=import_style=commonjs,binary:"
         out_arg += output_path + "/."
     else:
         print 'Error code selected not supported' + code
@@ -173,13 +146,19 @@ def run_protoc_gen(filepath_proto, code, output_path):
 
     proto_arg = filepath_proto+"/messages.proto"
     proto_src_path = "--proto_path="+filepath_proto+"/"
+    print "path_to_brew" + path_to_brew
+    try:
+        ls_output = subprocess.check_output([path_to_brew+'protoc',
+                                            '--version'])
+        print "Protoc version:" + ls_output
+    except subprocess.CalledProcessError as e:
+        print "ERROR:" + str(e)
 
     try:
-        ls_output = subprocess.check_output([protoc_binary,
+        ls_output = subprocess.check_output([path_to_brew+'protoc',
                                              out_arg,
                                              proto_src_path,
                                              proto_arg])
-        print ls_output
     except subprocess.CalledProcessError as e:
         print "ERROR:" + str(e)
 
@@ -190,11 +169,17 @@ def extract_proto_messages(proto_file_path):
     return message_list
 
 
-def embedded_main(proto_file_path, output_dir_path):
+def return_proto_file_contents():
+    proto_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'messages'))
+    proto = open_file_as_string(proto_file_path+"/messages.proto")
+    return proto
+
+
+def embedded_main(output_dir_path):
     output_dir_path = os.path.abspath(os.path.join(os.getcwd(),
                                       output_dir_path))
-    proto_file_path = os.path.abspath(os.path.join(os.getcwd(),
-                                      proto_file_path))
+    proto_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      "messages"))
 
     run_protoc_gen(proto_file_path,
                    'c',
@@ -225,20 +210,18 @@ def embedded_main(proto_file_path, output_dir_path):
     message_list = extract_proto_messages(proto_file_path+"/messages.proto")
 
     # Generate files based on found messages
-    generate_embedded_proto_nab(message_list, output_dir_path)
+    generate_embedded_proto(message_list, output_dir_path)
 
 
-def python_main(proto_file_path, output_dir_path):
+def python_main(output_dir_path):
+
     output_dir_path = os.path.abspath(os.path.join(os.getcwd(),
                                                    output_dir_path))
-    proto_file_path = os.path.abspath(os.path.join(os.getcwd(),
-                                                   proto_file_path))
+    proto_file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'messages'))
 
-    print("output_dir_path:" + output_dir_path)
-    print("proto_file_path:" + proto_file_path)
     run_protoc_gen(proto_file_path,
                    'python',
                    output_dir_path)
 
     message_list = extract_proto_messages(proto_file_path+"/messages.proto")
-    generate_python_proto_nab(message_list, output_dir_path)
+    generate_python_proto(message_list, output_dir_path)
