@@ -126,12 +126,27 @@ def find_messages_in_proto(proto_file_contents):
 
 
 def run_protoc_gen(filepath_proto, code, output_path):
-    # Required in order to find protoc installed via homebrew
-    custom_env = os.environ.copy()
-    path_to_brew = custom_env['HOME']+'/'+".linuxbrew/bin/"
 
-    # need to hack for different os:es here
-    protoc_binary = ""
+    # Determine
+    os_system = platform.system().lower()
+    os_arch = platform.machine().lower()
+
+    path_to_protoc = ''
+
+    if os_system == "linux":
+        # Required in order to find protoc installed via homebrew (only linux)
+        custom_env = os.environ.copy()
+        path_to_brew = custom_env['HOME']+'/'+".linuxbrew/bin/"
+        path_to_protoc = path_to_brew+'protoc'
+    elif os_system == "darwin":
+        print "do nothing extra"
+        path_to_protoc = 'protoc'
+    elif os_system == "windows":
+        path_to_protoc = 'protoc'
+    else:
+        print 'Error os selected not supported: ' + os_system
+        return False
+
     out_arg = ""
 
     if code == 'c':
@@ -146,16 +161,16 @@ def run_protoc_gen(filepath_proto, code, output_path):
 
     proto_arg = filepath_proto+"/messages.proto"
     proto_src_path = "--proto_path="+filepath_proto+"/"
-    print "path_to_brew" + path_to_brew
+
     try:
-        ls_output = subprocess.check_output([path_to_brew+'protoc',
+        ls_output = subprocess.check_output([path_to_protoc,
                                             '--version'])
         print "Protoc version:" + ls_output
     except subprocess.CalledProcessError as e:
         print "ERROR:" + str(e)
 
     try:
-        ls_output = subprocess.check_output([path_to_brew+'protoc',
+        ls_output = subprocess.check_output([path_to_protoc,
                                              out_arg,
                                              proto_src_path,
                                              proto_arg])
