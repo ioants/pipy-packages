@@ -25,7 +25,7 @@ class DatabaseHelper(object):
 
 
     def __exit__(self, *err):
-        self.disconnect_to_mysql()
+        self.disconnect_from_mysql()
         self.close()
 
     def connect_to_mysql(self):
@@ -341,3 +341,35 @@ class DatabaseHelper(object):
         else:
             self.connection.rollback()
             return False
+
+
+    def create_database_tables(self):
+        primary_key = "  PRIMARY KEY (`{0}`)"
+        table_list = self.schema['database']['tables']
+
+        self.connect_to_mysql_database()
+        if len(table_list) > 0:
+            print "[info] Creating {0} tables".format(len(table_list))
+
+            for table in table_list:
+                table_query = " "
+                table_query += self.get_table_start(table['name'])
+                for column in table['columns']:
+                    column_size = None
+                    if column['type']['size'] > 0:
+                        column_size = column['type']['size']
+
+                    table_query += self.create_column_definition(column['name'],
+                                                            column['type']['name'],
+                                                            column_size,
+                                                            column['type']['null'],
+                                                            column['type']['autoIncrement'])
+                table_query += primary_key.format(table['primaryKey'])
+                table_query += self.get_table_end()
+
+                if self.execute_query(table_query):
+                    print "[info] Created table: {0} ".format(table['name'])
+                else:
+                    print "[error] Failed to create table: {0} ".format(table['name'])
+        else:
+            print "[info] No tables defined in json file. Done"
