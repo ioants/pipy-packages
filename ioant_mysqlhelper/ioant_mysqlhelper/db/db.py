@@ -10,17 +10,17 @@ class DatabaseHelper(object):
         user: Username to mysql database
         password: Username password
         host: URL or IP to host of mysql database
-        db_name: Name of Nabton database
+        db_name: Name of IOAnt database
     """
 
-    def __init__(self, schema, host, user, password):
+    def __init__(self, db_name ,schema, host, user, password):
         """Return a DatabaseHelper object, based on schema supplied"""
         self.connection = None
         self.schema = schema
         self.user = user
         self.password = password
         self.host = host
-        self.db_name = schema['database']['name']
+        self.db_name = db_name
         self.result_cursor = None
 
 
