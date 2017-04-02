@@ -53,11 +53,11 @@ class IOAnt:
     def update_loop(self):
         """ Updates the mqtt loop - checking for messages """
         logger.debug("Loop Tick!")
+        time.sleep(self.delay/1000)
         rc = self.mqtt_client.loop()
         if rc is not 0:
             logger.error("No connection!")
             self.mqtt_client.reconnect()
-        time.sleep(self.delay/1000)
 
     def subscribe(self, topic):
         """ subscribe to a topic """
