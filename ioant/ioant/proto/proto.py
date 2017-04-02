@@ -135,9 +135,10 @@ def run_protoc_gen(filepath_proto, code, output_path):
 
     if os_system == "linux":
         # Required in order to find protoc installed via homebrew (only linux)
-        custom_env = os.environ.copy()
-        path_to_brew = custom_env['HOME']+'/'+".linuxbrew/bin/"
-        path_to_protoc = path_to_brew+'protoc'
+        #custom_env = os.environ.copy()
+        #path_to_brew = custom_env['HOME']+'/'+".linuxbrew/bin/"
+        #path_to_protoc = path_to_brew+'protoc'
+        path_to_protoc = 'protoc'
     elif os_system == "darwin":
         print "do nothing extra"
         path_to_protoc = 'protoc'
