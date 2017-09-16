@@ -22,3 +22,12 @@ Installation:
 ```shell
 pip install ioant_mysqlhelper
 ```
+
+
+## Update package to pypi
+```sh
+
+python setup.py sdist bdist_wheel
+twine upload dist/*
+
+```

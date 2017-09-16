@@ -27,7 +27,10 @@ def cast_value_to_type(value, attribute_type):
     if attribute_type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18, 14]:
         return int(value)
     if attribute_type is 8:
-        return bool(value)
+        if 'True' in value or 'true' in value:
+            return True
+        else:
+            return False
     if attribute_type is 9:
         return value
 
